@@ -19,8 +19,23 @@
     </header>
 
     <div id="viewer">
-      <img id="ghia-img" src="https://upload.wikimedia.org/wikipedia/commons/b/b1/1964_Volkswagen_Karmann_Ghia.jpg" alt="Karmann Ghia" style="width:100%;height:100%;object-fit:contain;display:block;">
-      <div id="overlay-hint">Tap systems below to explore · Pinch/scroll to zoom image</div>
+      <div id="selector-area" style="padding:16px;display:flex;flex-direction:column;gap:12px;max-width:420px;margin:auto;">
+        <label style="font-size:0.85rem;color:#9aa3b2;">Area of the car</label>
+        <select id="area-select" style="background:#1e2430;color:#e8eaed;border:1px solid #2a3140;border-radius:8px;padding:10px;font-size:1rem;">
+          <option value="">Select area…</option>
+          <option value="front">Front</option>
+          <option value="rear">Rear / Engine</option>
+          <option value="interior">Interior</option>
+          <option value="brakes">Brakes (system)</option>
+          <option value="electrical">Electrical (system)</option>
+        </select>
+
+        <label style="font-size:0.85rem;color:#9aa3b2;">Part / System</label>
+        <select id="part-select" style="background:#1e2430;color:#e8eaed;border:1px solid #2a3140;border-radius:8px;padding:10px;font-size:1rem;" disabled>
+          <option value="">Select part…</option>
+        </select>
+      </div>
+      <div id="overlay-hint">Choose an area, then a part</div>
     </div>
 
     <nav id="nav"></nav>
