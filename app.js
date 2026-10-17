@@ -11,7 +11,27 @@ function openPanel(id) {
   const sys = SYSTEMS[id];
   if (!sys) return;
   panelTitle.textContent = sys.name;
-  panelContent.innerHTML = `
+  let diagram = '';
+  if (id === 'brakes') {
+    diagram = `<div style="margin:12px 0;text-align:center;"><svg viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:400px;background:#1a1e26;border-radius:8px;">
+  <rect x="40" y="70" width="280" height="50" rx="8" fill="#666" stroke="#999" stroke-width="2"/>
+  <rect x="140" y="25" width="80" height="40" rx="4" fill="#88ccff" opacity="0.7" stroke="#aaddff"/>
+  <text x="180" y="50" text-anchor="middle" fill="#fff" font-size="11">Reservoir</text>
+  <rect x="70" y="80" width="40" height="30" fill="#aaa" stroke="#ccc"/>
+  <rect x="180" y="80" width="40" height="30" fill="#aaa" stroke="#ccc"/>
+  <text x="90" y="100" text-anchor="middle" fill="#fff" font-size="10">Rear</text>
+  <text x="200" y="100" text-anchor="middle" fill="#fff" font-size="10">Front</text>
+  <rect x="10" y="88" width="30" height="14" fill="#888"/>
+  <text x="25" y="115" text-anchor="middle" fill="#ccc" font-size="10">Pushrod</text>
+  <circle cx="100" cy="95" r="4" fill="#c45c26"/>
+  <circle cx="210" cy="95" r="4" fill="#c45c26"/>
+  <text x="100" y="140" text-anchor="middle" fill="#c45c26" font-size="10">Rear circuit</text>
+  <text x="210" y="140" text-anchor="middle" fill="#c45c26" font-size="10">Front circuit</text>
+  <text x="200" y="190" text-anchor="middle" fill="#9bb0d0" font-size="13">Dual-Circuit Master Cylinder (1972 Ghia)</text>
+  <text x="200" y="208" text-anchor="middle" fill="#8b95a5" font-size="10">Separate front & rear chambers — leak in one still leaves the other</text>
+</svg></div>`;
+  }
+  panelContent.innerHTML = diagram + `
     <p>${sys.description}</p>
     <h3>How it works</h3>
     <p>${sys.howItWorks}</p>
@@ -67,5 +87,4 @@ partSelect.addEventListener('change', () => {
 panelClose.onclick = () => panel.classList.remove('open');
 notesBtn.onclick = showNotes;
 
-// Hide the old bottom nav for now
 document.getElementById('nav').style.display = 'none';
