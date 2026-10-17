@@ -186,8 +186,8 @@ function buildSystems() {
   const elec = new THREE.Group();
   elec.visible = false;
   const points = [
-    { pos: [0, 0.7, 1.6], color: 0xf0c040 }, // rear (distributor area)
-    { pos: [0.4, 0.5, -1.2], color: 0xf0c040 }, // front battery area approximation
+    { pos: [0, 0.7, 1.6], color: 0xf0c040 },
+    { pos: [0.4, 0.5, -1.2], color: 0xf0c040 },
   ];
   points.forEach(p => {
     const m = new THREE.Mesh(
@@ -200,9 +200,11 @@ function buildSystems() {
   scene.add(elec);
   systemGroups.electrical = elec;
 
-  // Brakes
+  // Brakes — enhanced master cylinder visualization
   const brakes = new THREE.Group();
   brakes.visible = false;
+
+  // Wheel markers (discs/drums)
   [[-0.95, 0.32, 1.1], [0.95, 0.32, 1.1], [-0.95, 0.32, -1.1], [0.95, 0.32, -1.1]].forEach(pos => {
     const m = new THREE.Mesh(
       new THREE.TorusGeometry(0.22, 0.04, 8, 16),
@@ -212,6 +214,56 @@ function buildSystems() {
     m.position.set(...pos);
     brakes.add(m);
   });
+
+  // Master cylinder assembly (front of car, firewall area)
+  const mcGroup = new THREE.Group();
+  mcGroup.position.set(0.15, 0.55, -1.35);
+
+  // Main body (cast iron cylinder)
+  const mcBody = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.09, 0.09, 0.38, 16),
+    new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.6, roughness: 0.4 })
+  );
+  mcBody.rotation.z = Math.PI / 2;
+  mcGroup.add(mcBody);
+
+  // Dual reservoir on top
+  const reservoir = new THREE.Mesh(
+    new THREE.BoxGeometry(0.16, 0.12, 0.14),
+    new THREE.MeshStandardMaterial({ color: 0x88ccff, transparent: true, opacity: 0.65, roughness: 0.2 })
+  );
+  reservoir.position.set(0, 0.14, 0);
+  mcGroup.add(reservoir);
+
+  // Reservoir cap
+  const cap = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.055, 0.055, 0.03, 12),
+    new THREE.MeshStandardMaterial({ color: 0x333333 })
+  );
+  cap.position.set(0, 0.215, 0);
+  mcGroup.add(cap);
+
+  // Outlet ports
+  const portMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.8 });
+  [[0.12, 0.02, 0.04], [0.12, -0.02, -0.04], [-0.05, 0.02, 0.06]].forEach(p => {
+    const port = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.06, 8), portMat);
+    port.rotation.z = Math.PI / 2;
+    port.position.set(...p);
+    mcGroup.add(port);
+  });
+
+  // Pushrod (coming from pedal side)
+  const pushrod = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.018, 0.018, 0.22, 8),
+    new THREE.MeshStandardMaterial({ color: 0x888888 })
+  );
+  pushrod.rotation.z = Math.PI / 2;
+  pushrod.position.set(-0.28, 0, 0);
+  mcGroup.add(pushrod);
+
+  brakes.add(mcGroup);
+  brakes.userData.master = mcGroup;
+
   scene.add(brakes);
   systemGroups.brakes = brakes;
 
@@ -236,7 +288,6 @@ function showSystem(id) {
   currentSystem = id;
   engineRunning = (id === 'engine' || id === 'cooling');
 
-  // Update nav
   document.querySelectorAll('#nav button').forEach(b => b.classList.remove('active'));
   const btn = document.querySelector(`#nav button[data-id="${id}"]`);
   if (btn) btn.classList.add('active');
@@ -332,7 +383,7 @@ function animate() {
     if (pistons) {
       pistons.forEach((p, i) => {
         const phase = i * Math.PI / 2;
-        p.position.z += Math.sin(t * 8 + phase) * 0.002; // subtle motion
+        p.position.z += Math.sin(t * 8 + phase) * 0.002;
       });
     }
   }
