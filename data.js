@@ -69,22 +69,23 @@ const SYSTEMS = {
   },
   brakes: {
     id: 'brakes',
-    name: 'Brakes',
+    name: 'Brakes & Master Cylinder',
     short: 'Brakes',
     color: 0xb83232,
-    description: 'Front disc brakes (later models) and rear drums. Hydraulic system with master cylinder.',
-    howItWorks: 'Brake pedal pushes fluid from the master cylinder to wheel cylinders (drums) or calipers (discs). Fluid is incompressible, so force is transmitted equally.',
+    description: 'Your 1972 Ghia uses a dual-circuit hydraulic system. The master cylinder is the heart of it — it converts pedal force into hydraulic pressure that reaches the front discs and rear drums.',
+    howItWorks: 'When you press the brake pedal, a pushrod moves two pistons inside the master cylinder. These pistons force brake fluid out through separate circuits: one circuit serves the front brakes, the other serves the rear. Because the circuits are independent, a leak in one still leaves you with braking power on the other. Fluid is incompressible, so the pressure is transmitted almost instantly to the calipers and wheel cylinders.',
     commonIssues: [
-      'Soft pedal (air in lines or worn master cylinder)',
-      'Leaking wheel cylinders or calipers',
-      'Worn pads/shoes',
-      'Rusted brake lines',
-      'Incorrect pushrod clearance on master cylinder'
+      'Soft or spongy pedal (air in the lines or worn internal seals)',
+      'Pedal sinks slowly (internal bypass leak in the master cylinder)',
+      'Leaking at the reservoir grommets or outlet ports',
+      'Incorrect pushrod free-play (should be ~1 mm / 5–7 mm pedal movement before engagement)',
+      'Contaminated or low fluid in the dual reservoir'
     ],
     parts: [
-      { id: 'master', name: 'Master Cylinder', desc: 'Converts pedal force to hydraulic pressure.' },
-      { id: 'front-discs', name: 'Front Discs & Calipers', desc: 'Common on 1967+ Ghias.' },
-      { id: 'rear-drums', name: 'Rear Drums', desc: 'Drum brakes at the rear.' }
+      { id: 'master', name: 'Dual-Circuit Master Cylinder', desc: 'Two separate chambers (front & rear). Typical bore ~19–20.6 mm on later Type 1. Mounted on the firewall under the front trunk area. Has outlet ports for front left, front right, and rear circuit plus brake-light switches.' },
+      { id: 'reservoir', name: 'Brake Fluid Reservoir', desc: 'Translucent dual-port plastic reservoir that sits on top of (or is remote-mounted to) the master cylinder. Keeps both circuits fed. Check level regularly — fluid is hygroscopic and should be changed periodically.' },
+      { id: 'front-discs', name: 'Front Discs & Calipers', desc: 'Common on 1967+ Ghias. Larger fluid volume demand than drums.' },
+      { id: 'rear-drums', name: 'Rear Drums', desc: 'Wheel cylinders expand the shoes against the drums.' }
     ]
   },
   cooling: {
