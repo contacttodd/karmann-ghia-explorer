@@ -4,6 +4,8 @@ let currentSystem = null;
 let systemGroups = {};
 let animationId;
 let engineRunning = false;
+let exploded = false;
+let explodeTargets = [];
 
 const viewer = document.getElementById('viewer');
 const nav = document.getElementById('nav');
@@ -35,7 +37,6 @@ function initThree() {
   controls.maxDistance = 14;
   controls.target.set(0, 0.4, 0);
 
-  // Lights
   const ambient = new THREE.AmbientLight(0x404860, 0.6);
   scene.add(ambient);
   const dir = new THREE.DirectionalLight(0xffffff, 1.1);
@@ -46,7 +47,6 @@ function initThree() {
   fill.position.set(-4, 3, -3);
   scene.add(fill);
 
-  // Ground
   const ground = new THREE.Mesh(
     new THREE.CircleGeometry(10, 32),
     new THREE.MeshStandardMaterial({ color: 0x1a1e26, roughness: 0.9 })
@@ -66,63 +66,69 @@ function buildCar() {
   const bodyGroup = new THREE.Group();
   bodyGroup.name = 'body';
 
-  // Stylized Ghia body (simplified coupe shape)
-  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x8b1e3f, roughness: 0.35, metalness: 0.4 });
-  const chromeMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.8, roughness: 0.2 });
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x9b2d3a, roughness: 0.32, metalness: 0.45 });
+  const chromeMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.85, roughness: 0.18 });
+  const glassMat = new THREE.MeshStandardMaterial({ color: 0x88aacc, transparent: true, opacity: 0.35, roughness: 0.1 });
 
-  // Main body
-  const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.55, 3.6), bodyMat);
-  body.position.y = 0.45;
-  body.castShadow = true;
-  bodyGroup.add(body);
+  const lowerBody = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.38, 3.8), bodyMat);
+  lowerBody.position.y = 0.32;
+  lowerBody.castShadow = true;
+  bodyGroup.add(lowerBody);
 
-  // Hood / cabin slope
-  const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.4, 1.6), bodyMat);
-  cabin.position.set(0, 0.85, -0.3);
+  const mid = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.28, 2.4), bodyMat);
+  mid.position.set(0, 0.52, 0.1);
+  mid.castShadow = true;
+  bodyGroup.add(mid);
+
+  const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.45, 0.42, 1.35), bodyMat);
+  cabin.position.set(0, 0.82, -0.25);
   cabin.castShadow = true;
   bodyGroup.add(cabin);
 
-  // Roof
-  const roof = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.15, 1.2), bodyMat);
-  roof.position.set(0, 1.1, -0.2);
-  bodyGroup.add(roof);
+  const windshield = new THREE.Mesh(new THREE.BoxGeometry(1.35, 0.32, 0.04), glassMat);
+  windshield.position.set(0, 0.95, -0.85);
+  windshield.rotation.x = -0.35;
+  bodyGroup.add(windshield);
 
-  // Rear deck (engine area)
-  const rear = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.3, 1.0), bodyMat);
-  rear.position.set(0, 0.55, 1.4);
-  bodyGroup.add(rear);
+  const rearDeck = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.22, 1.15), bodyMat);
+  rearDeck.position.set(0, 0.48, 1.45);
+  bodyGroup.add(rearDeck);
 
-  // Wheels
-  const wheelGeo = new THREE.CylinderGeometry(0.32, 0.32, 0.18, 16);
-  const wheelMat = new THREE.MeshStandardMaterial({ color: 0x222222 });
-  const rimMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.7 });
-  [[-0.95, 0.32, 1.1], [0.95, 0.32, 1.1], [-0.95, 0.32, -1.1], [0.95, 0.32, -1.1]].forEach(pos => {
+  const nose = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.22, 0.55), bodyMat);
+  nose.position.set(0, 0.38, -1.65);
+  bodyGroup.add(nose);
+
+  const frontBumper = new THREE.Mesh(new THREE.BoxGeometry(1.85, 0.07, 0.1), chromeMat);
+  frontBumper.position.set(0, 0.26, -1.92);
+  bodyGroup.add(frontBumper);
+  const rearBumper = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.07, 0.1), chromeMat);
+  rearBumper.position.set(0, 0.26, 1.92);
+  bodyGroup.add(rearBumper);
+
+  const wheelGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.16, 16);
+  const wheelMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a });
+  const rimMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.75 });
+  [[-0.98, 0.3, 1.15], [0.98, 0.3, 1.15], [-0.98, 0.3, -1.15], [0.98, 0.3, -1.15]].forEach(pos => {
     const w = new THREE.Mesh(wheelGeo, wheelMat);
     w.rotation.z = Math.PI / 2;
     w.position.set(...pos);
     w.castShadow = true;
     bodyGroup.add(w);
-    const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.2, 12), rimMat);
+    const rim = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.18, 12), rimMat);
     rim.rotation.z = Math.PI / 2;
     rim.position.set(...pos);
     bodyGroup.add(rim);
   });
 
-  // Front bumper
-  const bumper = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.08, 0.12), chromeMat);
-  bumper.position.set(0, 0.28, -1.85);
-  bodyGroup.add(bumper);
-
   scene.add(bodyGroup);
+  systemGroups.body = bodyGroup;
 }
 
 function buildSystems() {
-  // Engine group (rear)
   const eng = new THREE.Group();
   eng.position.set(0, 0.55, 1.5);
   eng.visible = false;
 
-  // Crankcase
   const caseMesh = new THREE.Mesh(
     new THREE.BoxGeometry(0.7, 0.35, 0.9),
     new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.3 })
@@ -130,7 +136,6 @@ function buildSystems() {
   caseMesh.position.y = 0.1;
   eng.add(caseMesh);
 
-  // Cylinders (boxer)
   const cylGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.45, 12);
   const cylMat = new THREE.MeshStandardMaterial({ color: 0xc45c26 });
   [-0.35, 0.35].forEach(x => {
@@ -144,7 +149,6 @@ function buildSystems() {
     eng.add(right);
   });
 
-  // Fan housing
   const fanHousing = new THREE.Mesh(
     new THREE.CylinderGeometry(0.28, 0.28, 0.12, 16),
     new THREE.MeshStandardMaterial({ color: 0x555555 })
@@ -153,7 +157,6 @@ function buildSystems() {
   fanHousing.position.set(0, 0.35, -0.1);
   eng.add(fanHousing);
 
-  // Simple pistons for animation
   eng.userData.pistons = [];
   [-0.35, 0.35].forEach((x, i) => {
     const p1 = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), new THREE.MeshStandardMaterial({ color: 0xeeeeee }));
@@ -168,7 +171,6 @@ function buildSystems() {
   scene.add(eng);
   systemGroups.engine = eng;
 
-  // Suspension markers
   const susp = new THREE.Group();
   susp.visible = false;
   [[-0.9, 0.3, 1.1], [0.9, 0.3, 1.1], [-0.9, 0.3, -1.1], [0.9, 0.3, -1.1]].forEach(pos => {
@@ -182,7 +184,6 @@ function buildSystems() {
   scene.add(susp);
   systemGroups.suspension = susp;
 
-  // Electrical (simple glowing points)
   const elec = new THREE.Group();
   elec.visible = false;
   const points = [
@@ -200,11 +201,9 @@ function buildSystems() {
   scene.add(elec);
   systemGroups.electrical = elec;
 
-  // Brakes — enhanced master cylinder visualization
   const brakes = new THREE.Group();
   brakes.visible = false;
 
-  // Wheel markers (discs/drums)
   [[-0.95, 0.32, 1.1], [0.95, 0.32, 1.1], [-0.95, 0.32, -1.1], [0.95, 0.32, -1.1]].forEach(pos => {
     const m = new THREE.Mesh(
       new THREE.TorusGeometry(0.22, 0.04, 8, 16),
@@ -215,11 +214,9 @@ function buildSystems() {
     brakes.add(m);
   });
 
-  // Master cylinder assembly (front of car, firewall area)
   const mcGroup = new THREE.Group();
   mcGroup.position.set(0.15, 0.55, -1.35);
 
-  // Main body (cast iron cylinder)
   const mcBody = new THREE.Mesh(
     new THREE.CylinderGeometry(0.09, 0.09, 0.38, 16),
     new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.6, roughness: 0.4 })
@@ -227,7 +224,6 @@ function buildSystems() {
   mcBody.rotation.z = Math.PI / 2;
   mcGroup.add(mcBody);
 
-  // Dual reservoir on top
   const reservoir = new THREE.Mesh(
     new THREE.BoxGeometry(0.16, 0.12, 0.14),
     new THREE.MeshStandardMaterial({ color: 0x88ccff, transparent: true, opacity: 0.65, roughness: 0.2 })
@@ -235,7 +231,6 @@ function buildSystems() {
   reservoir.position.set(0, 0.14, 0);
   mcGroup.add(reservoir);
 
-  // Reservoir cap
   const cap = new THREE.Mesh(
     new THREE.CylinderGeometry(0.055, 0.055, 0.03, 12),
     new THREE.MeshStandardMaterial({ color: 0x333333 })
@@ -243,7 +238,6 @@ function buildSystems() {
   cap.position.set(0, 0.215, 0);
   mcGroup.add(cap);
 
-  // Outlet ports
   const portMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.8 });
   [[0.12, 0.02, 0.04], [0.12, -0.02, -0.04], [-0.05, 0.02, 0.06]].forEach(p => {
     const port = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.06, 8), portMat);
@@ -252,7 +246,6 @@ function buildSystems() {
     mcGroup.add(port);
   });
 
-  // Pushrod (coming from pedal side)
   const pushrod = new THREE.Mesh(
     new THREE.CylinderGeometry(0.018, 0.018, 0.22, 8),
     new THREE.MeshStandardMaterial({ color: 0x888888 })
@@ -267,7 +260,6 @@ function buildSystems() {
   scene.add(brakes);
   systemGroups.brakes = brakes;
 
-  // Cooling
   const cool = new THREE.Group();
   cool.visible = false;
   const fan = new THREE.Mesh(
@@ -283,16 +275,53 @@ function buildSystems() {
 }
 
 function showSystem(id) {
-  Object.values(systemGroups).forEach(g => g.visible = false);
+  Object.values(systemGroups).forEach(g => {
+    if (g && g !== systemGroups.body) g.visible = false;
+  });
   if (systemGroups[id]) systemGroups[id].visible = true;
   currentSystem = id;
   engineRunning = (id === 'engine' || id === 'cooling');
+
+  explodeSystem(id);
 
   document.querySelectorAll('#nav button').forEach(b => b.classList.remove('active'));
   const btn = document.querySelector(`#nav button[data-id="${id}"]`);
   if (btn) btn.classList.add('active');
 
   openPanel(id);
+}
+
+function explodeSystem(id) {
+  explodeTargets.forEach(t => {
+    t.mesh.position.copy(t.original);
+  });
+  explodeTargets = [];
+
+  const group = systemGroups[id];
+  if (!group || id === 'body') return;
+
+  group.traverse(obj => {
+    if (obj.isMesh && obj.parent === group) {
+      const original = obj.position.clone();
+      const dir = original.clone().normalize();
+      if (dir.length() < 0.1) dir.set(0, 1, 0);
+      const target = original.clone().add(dir.multiplyScalar(0.45));
+      explodeTargets.push({ mesh: obj, original, target });
+    }
+  });
+
+  if (group.userData.master) {
+    group.userData.master.children.forEach(obj => {
+      if (obj.isMesh) {
+        const original = obj.position.clone();
+        const dir = new THREE.Vector3(original.x, original.y + 0.2, original.z).normalize();
+        const target = original.clone().add(dir.multiplyScalar(0.35));
+        explodeTargets.push({ mesh: obj, original, target });
+      }
+    });
+  }
+
+  exploded = true;
 }
 
 function openPanel(id) {
@@ -378,6 +407,12 @@ function animate() {
   animationId = requestAnimationFrame(animate);
   const t = performance.now() * 0.001;
 
+  if (exploded) {
+    explodeTargets.forEach(item => {
+      item.mesh.position.lerp(item.target, 0.08);
+    });
+  }
+
   if (engineRunning && systemGroups.engine) {
     const pistons = systemGroups.engine.userData.pistons;
     if (pistons) {
@@ -404,7 +439,6 @@ function onResize() {
 panelClose.onclick = () => panel.classList.remove('open');
 notesBtn.onclick = showNotes;
 
-// Init
 buildNav();
 initThree();
 showSystem('engine');
